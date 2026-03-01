@@ -3,10 +3,326 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Test Codex</title>
+  <title>Protocole Mnémosyne</title>
+  <style>
+    :root {
+      --bg-1: #07090f;
+      --bg-2: #0d1422;
+      --bg-3: #120d1d;
+      --panel: rgba(12, 17, 28, 0.8);
+      --border: rgba(140, 170, 220, 0.23);
+      --text: #dde7ff;
+      --muted: #8a97b8;
+      --accent: #7fd6ff;
+      --accent-2: #b68cff;
+      --danger: #ff7f9a;
+      --ok: #83ffce;
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.44);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", "Segoe UI", Roboto, system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 15% 15%, #141a2a 0%, transparent 35%),
+                  radial-gradient(circle at 80% 0%, #241530 0%, transparent 45%),
+                  linear-gradient(135deg, var(--bg-1), var(--bg-2) 42%, var(--bg-3));
+      display: grid;
+      place-items: center;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.01),
+        rgba(255, 255, 255, 0.01) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      pointer-events: none;
+      animation: scanline 10s linear infinite;
+      opacity: 0.25;
+    }
+
+    @keyframes scanline {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(6px); }
+    }
+
+    @keyframes glitch {
+      0%, 100% { transform: translate(0); text-shadow: 0 0 0 transparent; }
+      20% { transform: translate(-1px, 0); text-shadow: 1px 0 var(--accent-2); }
+      40% { transform: translate(1px, -1px); text-shadow: -1px 0 var(--accent); }
+      60% { transform: translate(0, 1px); text-shadow: 0 0 6px rgba(127, 214, 255, 0.3); }
+    }
+
+    .shell {
+      width: min(900px, 100%);
+      border: 1px solid var(--border);
+      background: linear-gradient(160deg, rgba(20, 29, 45, 0.75), rgba(10, 12, 20, 0.9));
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(5px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .shell::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      border: 1px solid rgba(200, 235, 255, 0.1);
+      pointer-events: none;
+    }
+
+    header {
+      padding: 20px 24px 14px;
+      border-bottom: 1px solid rgba(140, 170, 220, 0.13);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(1.25rem, 3vw, 1.8rem);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      animation: glitch 6.8s infinite;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .seed-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      align-items: center;
+      max-width: 330px;
+    }
+
+    input[type="number"] {
+      width: 138px;
+      border-radius: 10px;
+      border: 1px solid rgba(147, 192, 237, 0.4);
+      background: rgba(7, 10, 17, 0.8);
+      color: var(--text);
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(127, 214, 255, 0.2);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 1fr 250px;
+      gap: 0;
+      min-height: 520px;
+    }
+
+    .center {
+      padding: 24px;
+      border-right: 1px solid rgba(140, 170, 220, 0.13);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(140, 170, 220, 0.2);
+      border-radius: 14px;
+      padding: 16px;
+      transition: transform 0.35s ease, border-color 0.2s ease;
+    }
+
+    .panel:hover { transform: translateY(-1px); border-color: rgba(127, 214, 255, 0.4); }
+
+    #narrative {
+      color: #cdd8f9;
+      line-height: 1.55;
+      min-height: 82px;
+    }
+
+    #puzzlePrompt { white-space: pre-wrap; line-height: 1.5; }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button {
+      border: 1px solid rgba(127, 214, 255, 0.45);
+      background: linear-gradient(165deg, rgba(65, 124, 170, 0.35), rgba(31, 45, 77, 0.35));
+      color: var(--text);
+      border-radius: 10px;
+      padding: 9px 12px;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    button:hover { transform: translateY(-1px); border-color: var(--accent); }
+    button:active { transform: translateY(1px); }
+    button.danger { border-color: rgba(255, 127, 154, 0.35); }
+
+    .choice-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .choice {
+      border: 1px solid rgba(182, 140, 255, 0.35);
+      background: rgba(31, 21, 52, 0.45);
+      text-align: left;
+      min-height: 56px;
+    }
+
+    #feedback { min-height: 24px; color: var(--muted); }
+
+    aside {
+      padding: 22px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .metric {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .bar {
+      grid-column: 1 / -1;
+      height: 8px;
+      border-radius: 50px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      width: 0;
+      transition: width 0.35s ease;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .history {
+      margin: 0;
+      padding-left: 18px;
+      color: #a9b7d9;
+      font-size: 0.84rem;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .tiny {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    #debug {
+      margin-top: auto;
+      padding: 10px;
+      background: rgba(5, 7, 12, 0.7);
+      border: 1px dashed rgba(127, 214, 255, 0.35);
+      border-radius: 8px;
+      display: none;
+      font-family: "Cascadia Mono", "Consolas", monospace;
+      font-size: 0.78rem;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; }
+      .center { border-right: 0; border-bottom: 1px solid rgba(140, 170, 220, 0.13); }
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello Codex</h1>
-  <p>Si tu lis ça, le repo marche.</p>
+  <div class="shell">
+    <header>
+      <div>
+        <h1 class="title">Protocole Mnémosyne</h1>
+        <p class="subtitle">Moteur procédural psychologique • Seed déterministe</p>
+      </div>
+      <div class="seed-box">
+        <input id="seedInput" type="number" placeholder="Seed" aria-label="Seed manuelle" />
+        <button id="applySeedBtn">Appliquer</button>
+        <button id="newSeedBtn" class="danger">Nouvelle seed</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="center">
+        <div class="panel">
+          <div id="narrative"></div>
+        </div>
+
+        <div class="panel">
+          <h3 id="puzzleTitle">Énigme</h3>
+          <div id="puzzlePrompt"></div>
+          <div class="row" style="margin-top:12px;">
+            <input id="answerInput" type="text" placeholder="Votre réponse..." style="flex:1; min-width:220px;" />
+            <button id="submitBtn">Valider</button>
+            <button id="hintBtn">Indice</button>
+          </div>
+          <div id="choices" class="choice-list" style="margin-top:12px;"></div>
+          <div id="feedback" style="margin-top:12px;"></div>
+        </div>
+
+        <div class="row">
+          <button id="resumeBtn">Reprendre sauvegarde</button>
+          <button id="restartBtn" class="danger">Réinitialiser la partie</button>
+        </div>
+      </section>
+
+      <aside>
+        <div class="metric">Stress <span id="stressVal">0</span><div class="bar"><div id="stressBar" class="fill"></div></div></div>
+        <div class="metric">Lucidité <span id="lucidityVal">0</span><div class="bar"><div id="lucidityBar" class="fill"></div></div></div>
+        <div class="metric">Distorsion <span id="distortionVal">0</span><div class="bar"><div id="distortionBar" class="fill"></div></div></div>
+        <div class="metric">Charge cognitive <span id="loadVal">0</span><div class="bar"><div id="loadBar" class="fill"></div></div></div>
+
+        <div class="panel" style="padding:12px;">
+          <div class="tiny">Seed active: <span id="seedLabel"></span></div>
+          <div class="tiny">Énigmes jouées: <span id="roundLabel"></span></div>
+          <div class="tiny">Erreurs totales: <span id="errorLabel"></span></div>
+        </div>
+
+        <div>
+          <div class="tiny" style="margin-bottom:6px;">Historique des seeds</div>
+          <ul id="seedHistory" class="history"></ul>
+        </div>
+
+        <pre id="debug"></pre>
+      </aside>
+    </main>
+  </div>
+
+  <script src="engine.js"></script>
 </body>
 </html>
