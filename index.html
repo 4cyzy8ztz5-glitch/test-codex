@@ -3,10 +3,328 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Test Codex</title>
+  <title>Architecte de Vie 2.x</title>
+  <style>
+    :root {
+      --bg-1: #fff3f7;
+      --bg-2: #fff8f2;
+      --card: rgba(255, 255, 255, 0.75);
+      --ink: #5e4c58;
+      --muted: #8c7b88;
+      --accent: #f2a8be;
+      --accent-2: #b9c9ff;
+      --good: #9ccfb8;
+      --warn: #f5c7a1;
+      --shadow: 0 12px 30px rgba(182, 137, 158, 0.1);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", -apple-system, sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      background-size: 200% 200%;
+      animation: softMove 16s ease-in-out infinite;
+    }
+
+    @keyframes softMove {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 18px;
+      backdrop-filter: blur(8px);
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .card:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(182, 137, 158, 0.15); }
+
+    h1,h2,h3 { margin-top: 0; font-weight: 600; }
+    h1 { font-size: 1.75rem; margin-bottom: 8px; }
+    p { margin: 6px 0; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+    }
+
+    .mode-switch {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 600;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 6px 14px rgba(152, 111, 137, 0.12);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button.active { background: linear-gradient(120deg, #ffd8e7, #dce6ff); }
+
+    .form-grid { display: grid; gap: 10px; }
+
+    textarea, input[type="text"], input[type="number"], select {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(165, 137, 150, 0.22);
+      background: rgba(255,255,255,0.85);
+      color: var(--ink);
+      padding: 10px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea { min-height: 70px; resize: vertical; }
+    textarea:focus, input:focus, select:focus { border-color: var(--accent); }
+
+    .inline-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .score-panel {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .score-circle {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--accent) calc(var(--score) * 1%), rgba(255,255,255,0.7) 0%);
+      position: relative;
+      animation: breathe 5s ease-in-out infinite;
+    }
+
+    .score-circle::after {
+      content: "";
+      width: 124px;
+      height: 124px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      position: absolute;
+    }
+
+    .score-value { position: relative; z-index: 1; font-size: 1.7rem; font-weight: 700; }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    .bar-wrap { display: grid; gap: 8px; }
+    .bar-line { display: grid; grid-template-columns: 140px 1fr 42px; gap: 10px; align-items: center; }
+    .bar-track { height: 10px; border-radius: 999px; background: rgba(255,255,255,0.65); overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.6s ease; }
+
+    .list-pill {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(180, 150, 160, 0.2);
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .month {
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      min-height: 86px;
+      display: grid;
+      gap: 5px;
+      border: 1px solid rgba(195, 168, 180, 0.2);
+      transition: transform 0.3s;
+    }
+
+    .month:hover { transform: translateY(-2px); }
+    .month strong { font-size: 0.85rem; }
+    .tiny { font-size: 0.8rem; color: var(--muted); }
+
+    #radarCanvas {
+      width: 100%;
+      max-width: 360px;
+      aspect-ratio: 1;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(181, 153, 170, 0.25);
+    }
+
+    .debug-console {
+      display: none;
+      max-height: 180px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      background: rgba(39, 30, 35, 0.87);
+      color: #f8dbe7;
+      padding: 10px;
+      border-radius: 12px;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 820px) {
+      .score-panel { grid-template-columns: 1fr; justify-items: center; }
+      .inline-3 { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .no-print { display: none !important; }
+      .card { box-shadow: none; border: 1px solid #ddd; }
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello Codex</h1>
-  <p>Si tu lis ça, le repo marche.</p>
+  <main class="container">
+    <section class="card no-print">
+      <h1>Architecte de Vie 2.x</h1>
+      <p>Laboratoire stratégique local : alignement mode de vie ↔ objectif, simulation sur 6 mois et plan d’action adaptatif.</p>
+      <div class="mode-switch">
+        <button id="modeIntrospection" class="active">Mode introspection</button>
+        <button id="modeRapide">Mode rapide (3 min)</button>
+        <button id="runAnalysis">Lancer l’analyse</button>
+        <button id="exportPdf">Exporter en PDF</button>
+      </div>
+    </section>
+
+    <section class="grid-2 no-print">
+      <article class="card">
+        <h2>Entrée stratégique</h2>
+        <div id="introspectionForm" class="form-grid">
+          <label>Objectifs long terme
+            <textarea id="objectifs" placeholder="Ex: passer en freelance rentable, améliorer santé, développer une expertise..."></textarea>
+          </label>
+          <label>Habitudes actuelles
+            <textarea id="habitudes" placeholder="Ex: sommeil irrégulier, 2h focus/jour, sport 2 fois/semaine..."></textarea>
+          </label>
+          <label>Contraintes (temps, énergie, santé)
+            <textarea id="contraintes" placeholder="Ex: 35h de travail, fatigue chronique légère, charge familiale..."></textarea>
+          </label>
+          <label>Priorités actuelles
+            <textarea id="priorites" placeholder="Ex: revenu stable, constance, apprentissage... "></textarea>
+          </label>
+          <div class="inline-3">
+            <label>Discipline (1-10)<input type="number" id="discipline" min="1" max="10" value="6"></label>
+            <label>Clarté (1-10)<input type="number" id="clarte" min="1" max="10" value="6"></label>
+            <label>Énergie (1-10)<input type="number" id="energie" min="1" max="10" value="6"></label>
+          </div>
+          <div class="inline-3">
+            <label>Cohérence (1-10)<input type="number" id="coherence" min="1" max="10" value="6"></label>
+            <label>Friction env. (1-10)<input type="number" id="friction" min="1" max="10" value="4"></label>
+            <label>Taux de réussite récent (%)<input type="number" id="reussite" min="0" max="100" value="62"></label>
+          </div>
+        </div>
+
+        <div id="rapidForm" class="form-grid" style="display:none">
+          <label>Objectif principal
+            <input type="text" id="objectifRapide" placeholder="Ex: Doubler ma capacité de production en 6 mois" />
+          </label>
+          <div class="inline-3">
+            <label>Temps hebdo libre (h)<input type="number" id="tempsLibre" min="1" max="80" value="12"></label>
+            <label>Niveau d’énergie (1-10)<input type="number" id="energieRapide" min="1" max="10" value="6"></label>
+            <label>Constance perçue (1-10)<input type="number" id="constanceRapide" min="1" max="10" value="5"></label>
+          </div>
+          <label>Obstacle dominant
+            <select id="obstacleRapide">
+              <option value="fatigue">Fatigue</option>
+              <option value="dispersion">Dispersion</option>
+              <option value="charge">Charge mentale</option>
+              <option value="environnement">Environnement défavorable</option>
+            </select>
+          </label>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Visualisation comportementale</h2>
+        <canvas id="radarCanvas" width="360" height="360" aria-label="Radar comportemental"></canvas>
+        <div class="bar-wrap" id="metricBars"></div>
+      </article>
+    </section>
+
+    <section class="card" id="reportSection">
+      <h2>Rapport d’alignement</h2>
+      <div class="score-panel">
+        <div class="score-circle" id="scoreCircle" style="--score: 0">
+          <span class="score-value" id="scoreValue">0%</span>
+        </div>
+        <div>
+          <p><strong>Écarts majeurs</strong></p>
+          <div id="gaps" class="list-pill"></div>
+          <p><strong>Leviers prioritaires</strong></p>
+          <div id="levers" class="list-pill"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Plan 6 mois & scénarios</h2>
+      <div id="scenarios" class="list-pill"></div>
+      <div class="timeline" id="timeline"></div>
+    </section>
+
+    <section class="card">
+      <h2>Micro-upgrades hebdomadaires</h2>
+      <div class="grid-2">
+        <div>
+          <h3>Prioritaires (x3)</h3>
+          <div id="actionsPrimary" class="list-pill"></div>
+        </div>
+        <div>
+          <h3>Secondaires (x2) + optionnelle</h3>
+          <div id="actionsSecondary" class="list-pill"></div>
+        </div>
+      </div>
+      <p class="tiny" id="adaptiveNote"></p>
+      <div id="debugConsole" class="debug-console"></div>
+    </section>
+  </main>
+
+  <script src="engine.js"></script>
 </body>
 </html>
